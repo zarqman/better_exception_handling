@@ -1,0 +1,122 @@
+BetterExceptionHandling
+=======================
+
+BetterExceptionHandling is a viable replacement for ExceptionNotifier. It has
+similar functionality (although a bit less configurability), but a lot less 
+code because it relies on much of the built-in exception handling code in more
+recent versions of Rails. 
+
+Additionally, it adds a number of enhancements to Rails built-in exception
+handling to make it more reliable for non-HTML requests (XML, JSON, AJAX).
+Lastly, it incorporates a fix to throw (and handle) meaningful exceptions in
+cases of bad XML or JSON parsing.
+
+The plugin has been tested on Rails 2.3.4 and that version is highly 
+recommended due to some bug fixes in parsing XML requests. However, it should
+work with any 2.3.x Rack-compatible version of Rails. It will not work with
+anything older.
+
+This is a rather opinionated plugin. It doesn't have a lot of configuration
+options and instead prefers sensible defaults in most cases.
+
+
+Usage
+=====
+
+Usage is very straightforward:
+
+Add an initializer to config/initializers/ to setup email notifications. You 
+need to have a functioning instance of ActionMailer and SMTP already -- this
+plugin piggybacks on that config.
+
+  BetterExceptionNotifier.sender_address = %("your app" <app@example.com>)
+  BetterExceptionNotifier.exception_recipients = %w( you@example.com )
+  BetterExceptionNotifier.email_prefix = '[ERROR] '
+
+The first two are required, the third is optional.
+
+
+Next, in your ApplicationController, add one include at the top:
+
+  class ApplicationController < ActionController::Base
+    include BetterExceptionHandling
+  end
+
+That alone will enable most features. Among the default features is 
+content-type specific rendering of fatal errors in production mode. The
+default Rails behavior is to render public/500.html. This doesn't change for 
+HTML requests. However, XML, JSON, and JS requests are now given their own 
+proper rendering.
+
+Each of these (along with the HTML error) can now be customized by the
+creation of an appropriate view file named after the status code:
+
+  views/exceptions/500.html.erb
+  views/exceptions/500.js.rjs
+  views/exceptions/500.json.erb
+  views/exceptions/500.xml.builder
+
+These are just examples; you may use 500.js.erb or whatever else is a valid
+Rails template. As hinted at above, they should be placed in 
+app/views/exceptions. If for some reason the above views are insufficient in
+providing the necessary customization, you may instead define any of the
+following methods to do the rendering instead:
+
+  render_error_for_html(exception, status)
+  render_error_for_xml(exception, status)
+  render_error_for_json(exception, status)
+  render_error_for_js(exception, status)
+
+
+An optional feature is to also enable content-type specific exceptions and 
+backtraces while in development mode. Again, by default Rails renders HTML 
+exceptions for everything. If you would prefer to see content-type specific
+renderings of the exceptions in local development mode, they may be enabled 
+on a per-content-type basis:
+
+  enable_content_specific_exceptions :xml, :js, :json
+
+By default these generate XML, plain text, and JSON renderings, respectively, 
+of the exception and backtrace.
+
+You may also create your own custom rendering for development exceptions by 
+defining any or all of these methods in your controller:
+
+  rescue_action_locally_html(exception)
+  rescue_action_locally_xml(exception)
+  rescue_action_locally_json(exception)
+  rescue_action_locally_js(exception)
+
+Each method should make the appropriate call to render().
+
+
+Another optional feature is to validate the Content-type header for XML POST 
+and PUT requests. To enable this test, add this to your controller:
+
+  before_filter :validate_content_type_for_xml
+
+It is recommended to only add this to controllers that intentionally handle
+XML requests. While unlikely, it is possible to have false positives. The test
+for an invalid Content-type looks for '<' or '>' in keys to the params hash.
+
+
+Among the default behavior is to render a meaningful error on an invalid
+authenticity token, for both HTML and JS requests. Either of these can be 
+changed by defining the methods render_auth_token_error_html() and/or 
+render_auth_token_error_js() in your controller.
+
+
+Copyright
+=========
+
+Copyright (c) 2009 t.e.morgan (http://iprog.com/), released under the MIT 
+license. Portions taken from the following plugins and subject to the 
+following copyrights:
+
+exception_notification
+  Copyright (c) 2005 Jamis Buck, released under the MIT license
+
+request_exception_handler
+  Copyright (c) 2009 Karol Bucek (http://blog.kares.org), released under the 
+  MIT license
+

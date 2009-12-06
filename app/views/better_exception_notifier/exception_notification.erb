@@ -1,0 +1,46 @@
+An exception occurred:
+
+* Action     : <%= @controller.class %>#<%= @controller.action_name %>
+* Exception  : <%= @exception.class %>
+* Message    : <%= @exception.message %>
+* Time       : <%= Time.current %>
+  
+
+Request
+=======
+
+* URL        : <%= @request.method.to_s.upcase %> <%= @request.protocol %><%= @request.env["HTTP_X_FORWARDED_HOST"] || @request.env["HTTP_HOST"] %><%= @request.request_uri %>
+* IP address : <%= @request.env["HTTP_X_FORWARDED_FOR"] || @request.env["REMOTE_ADDR"] %>
+* Parameters : <%= filter_sensitive_post_data_parameters(@request.parameters).inspect %>
+* Rails root : <%= rails_root %>
+* Process    : <%= $$ %>
+* Server     : <%= `hostname -s`.chomp %>
+
+
+Session
+=======
+
+* Session ID : <%= @request.session[:session_id].inspect %>
+* Data       : <%= @request.session.except(:session_id).inspect %>
+* Options    : <%= @request.session_options.inspect %>
+
+
+Environment
+===========
+
+<% max = @request.env.keys.max { |a,b| a.length <=> b.length } -%>
+<% @request.env.keys.sort.each do |key| -%>
+  <%- if filtered_params = filter_sensitive_post_data_from_env(key, @request.env[key].inspect.strip) -%>
+* <%= "%-*s: %s" % [max.length, key, filtered_params] %>
+  <%- end -%>
+<% end -%>
+
+
+Backtrace
+=========
+
+<%= "\n#{@exception.class} (#{@exception.message}):\n  " +
+  @backtrace.join("\n  ") + "\n\n" %>
+
+<%#= sanitize_backtrace(@exception.backtrace).join "\n" %>
+
