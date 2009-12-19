@@ -244,6 +244,11 @@ module BetterExceptionHandling
       alias :render_backtrace_for_html :rescue_action_locally
       alias :rescue_action_locally :rescue_action_locally_better
       
+      # add ActiveResource classes to default exception handler
+      self.rescue_responses["ActiveResource::ResourceNotFound"] = :not_found
+      self.rescue_responses["ActiveResource::ResourceGone"] = :gone
+      self.rescue_responses["ActiveResource::ResourceInvalid"] = :unprocessable_entity
+      self.rescue_responses["ActiveResource::ResourceConflict"] = :conflict
       
       # Handle XML parsing errors with a helpful error message.
       rescue_from 'LibXML::XML::Error', 'REXML::ParseException' do |exception|
