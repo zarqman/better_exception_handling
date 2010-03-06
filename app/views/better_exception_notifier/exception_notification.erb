@@ -20,7 +20,7 @@ Request
 Session
 =======
 
-* Session ID : <%= @request.session[:session_id].inspect %>
+* Session ID : <%= @request.session_options[:id].inspect %>
 * Data       : <%= @request.session.except(:session_id).inspect %>
 * Options    : <%= @request.session_options.inspect %>
 
